@@ -1,0 +1,10 @@
+builders:
+  copy_with_build:
+    import: "package:copy_with_build/builder.dart"
+    builder_factories: ["copyWithBuilder"]
+    # The `partId` argument to `SharedPartBuilder` is "some_cool_builder"
+    build_extensions: {".dart": [".copy_with.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    # To copy the `.g.part` content into `.g.dart` in the source tree
+    applies_builders: ["source_gen:combining_builder"]
