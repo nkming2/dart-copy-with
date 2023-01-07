@@ -1,6 +1,6 @@
 name: copy_with
 description: Generate copyWith()
-version: 1.0.0
+version: 1.1.0
 homepage: https://gitlab.com/nkming2/dart-copy-with
 
 environment:
