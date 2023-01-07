@@ -153,5 +153,17 @@ extension \$IgnoreFieldCopyWith on IgnoreField {
 }
 """));
     });
+
+    test("keep field", () async {
+      await expectGen("KeepField", completion("""
+extension \$KeepFieldCopyWith on KeepField {
+  KeepField copyWith({int? def}) => _\$copyWith(def: def);
+
+  KeepField _\$copyWith({int? def}) {
+    return KeepField(abc: abc, def: def ?? this.def);
+  }
+}
+"""));
+    });
   });
 }

@@ -45,6 +45,7 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
 
   String _buildParameterBody(List<_FieldMeta> fields) {
     return fields
+        .where((f) => !f.isKeep)
         .map((f) =>
             (f.isNullable ? "Nullable<${f.typeStr}>? " : "${f.typeStr}? ") +
             f.name)
@@ -52,12 +53,17 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   }
 
   String _buildDelegateBody(List<_FieldMeta> fields) {
-    return fields.map((f) => "${f.name}: ${f.name}").join(",");
+    return fields
+        .where((f) => !f.isKeep)
+        .map((f) => "${f.name}: ${f.name}")
+        .join(",");
   }
 
   String _buildConstructorBody(List<_FieldMeta> fields) {
     return fields.map((f) {
-      if (f.isNullable) {
+      if (f.isKeep) {
+        return "${f.name}: ${f.name}";
+      } else if (f.isNullable) {
         return "${f.name}: ${f.name} != null ? ${f.name}.obj : this.${f.name}";
       } else {
         return "${f.name}: ${f.name} ?? this.${f.name}";
@@ -106,11 +112,13 @@ class _FieldMeta {
     required this.name,
     required this.typeStr,
     required this.isNullable,
+    required this.isKeep,
   });
 
   final String name;
   final String typeStr;
   final bool isNullable;
+  final bool isKeep;
 }
 
 class _FieldMetaBuilder {
@@ -121,6 +129,7 @@ class _FieldMetaBuilder {
       name: field.name,
       typeStr: typeStr,
       isNullable: _isNullable,
+      isKeep: _getKeepAnnotation(field) != null,
     );
   }
 
@@ -142,6 +151,14 @@ class _FieldMetaBuilder {
 IgnoreCopyWith? _getIgnoreAnnotation(FieldElement field) {
   if (TypeChecker.fromRuntime(IgnoreCopyWith).hasAnnotationOf(field)) {
     return const IgnoreCopyWith();
+  } else {
+    return null;
+  }
+}
+
+KeepCopyWith? _getKeepAnnotation(FieldElement field) {
+  if (TypeChecker.fromRuntime(KeepCopyWith).hasAnnotationOf(field)) {
+    return const KeepCopyWith();
   } else {
     return null;
   }

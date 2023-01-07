@@ -85,4 +85,13 @@ class IgnoreField {
   final int def;
 }
 
+@autoCopyWith
+class KeepField {
+  const KeepField({required this.abc, required this.def});
+
+  @keepCopyWith
+  final int abc;
+  final int def;
+}
+
 typedef SuperType = int;
