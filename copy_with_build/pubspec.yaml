@@ -1,6 +1,6 @@
 name: copy_with_build
 description: Generate copyWith()
-version: 1.1.0
+version: 1.2.0
 homepage: https://gitlab.com/nkming2/dart-copy-with
 publish_to: none
 
@@ -11,19 +11,19 @@ dependencies:
   analyzer: '>=4.0.0'
   build: ^2.3.1
   collection: '>=1.15.0 <2.0.0'
-  source_gen: ^1.2.6
   copy_with:
     git:
       url: https://gitlab.com/nkming2/dart-copy-with
       path: copy_with
-      ref: copy_with-1.1.0
+      ref: copy_with-1.2.0
+  source_gen: ^1.2.6
 
 dev_dependencies:
   build_test: ^2.1.5
-  lints: ^2.0.0
-  test: ^1.16.0
   code_gen_tester:
     git:
       url: https://github.com/rrousselGit/functional_widget
       ref: v0.10.0
       path: packages/code_gen_tester
+  lints: ^2.0.0
+  test: ^1.16.0
