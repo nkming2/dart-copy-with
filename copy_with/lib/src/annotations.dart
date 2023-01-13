@@ -1,15 +1,15 @@
-class AutoCopyWith {
-  const AutoCopyWith();
+class CopyWith {
+  const CopyWith();
 }
 
-class IgnoreCopyWith {
-  const IgnoreCopyWith();
+class Ignore {
+  const Ignore();
 }
 
-class KeepCopyWith {
-  const KeepCopyWith();
+class Keep {
+  const Keep();
 }
 
-const autoCopyWith = AutoCopyWith();
-const ignoreCopyWith = IgnoreCopyWith();
-const keepCopyWith = KeepCopyWith();
+const genCopyWith = CopyWith();
+const ignore = Ignore();
+const keep = Keep();

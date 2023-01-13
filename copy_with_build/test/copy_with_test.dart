@@ -8,7 +8,7 @@ void main() {
   Future<void> expectGen(String name, Matcher matcher) async =>
       expectGenerateNamed(await tester, name, generator, matcher);
 
-  group("AutoCopyWith", () {
+  group("CopyWith", () {
     test("empty", () async {
       await expectGen("Empty", completion("""
 extension \$EmptyCopyWith on Empty {

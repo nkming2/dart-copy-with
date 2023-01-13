@@ -2,17 +2,17 @@
 
 import 'package:copy_with/copy_with.dart';
 
-@autoCopyWith
+@genCopyWith
 class Empty {}
 
-@autoCopyWith
+@genCopyWith
 class SingleField {
   const SingleField({required this.abc});
 
   final int abc;
 }
 
-@autoCopyWith
+@genCopyWith
 class MultipleField {
   const MultipleField({required this.abc, required this.def});
 
@@ -20,7 +20,7 @@ class MultipleField {
   final int def;
 }
 
-@autoCopyWith
+@genCopyWith
 class NullableField {
   NullableField({required this.abc});
 
@@ -33,63 +33,63 @@ class BaseClass {
   final int abc;
 }
 
-@autoCopyWith
+@genCopyWith
 class DerivedClass extends BaseClass {
   const DerivedClass({required super.abc, required this.def});
 
   final int def;
 }
 
-@autoCopyWith
+@genCopyWith
 class StaticField {
   static final int abc = 1;
 }
 
-@autoCopyWith
+@genCopyWith
 class PrivateField {
   final int _abc = 1;
 }
 
-@autoCopyWith
+@genCopyWith
 class Getter {
   int get abc => 1;
 }
 
-@autoCopyWith
+@genCopyWith
 class TemplateField {
   const TemplateField({required this.abc});
 
   final List<int> abc;
 }
 
-@autoCopyWith
+@genCopyWith
 class FunctionField {
   const FunctionField({required this.abc});
 
   final void Function() abc;
 }
 
-@autoCopyWith
+@genCopyWith
 class AliasField {
   const AliasField({required this.abc});
 
   final SuperType abc;
 }
 
-@autoCopyWith
+@genCopyWith
 class IgnoreField {
   const IgnoreField({this.abc = 0, required this.def});
 
-  @ignoreCopyWith
+  @ignore
   final int abc;
   final int def;
 }
 
-@autoCopyWith
+@genCopyWith
 class KeepField {
   const KeepField({required this.abc, required this.def});
 
-  @keepCopyWith
+  @keep
   final int abc;
   final int def;
 }

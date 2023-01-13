@@ -4,7 +4,7 @@ import 'package:build/build.dart';
 import 'package:copy_with/copy_with.dart';
 import 'package:source_gen/source_gen.dart';
 
-class CopyWithGenerator extends GeneratorForAnnotation<AutoCopyWith> {
+class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
   const CopyWithGenerator();
 
   @override
@@ -17,7 +17,7 @@ class CopyWithGenerator extends GeneratorForAnnotation<AutoCopyWith> {
       print("Not a class");
       return null;
     }
-    final copyWith = AutoCopyWith();
+    final copyWith = CopyWith();
     final clazz = element;
     final fields = _getFields(clazz, copyWith);
     if (fields.isEmpty) {
@@ -71,7 +71,7 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
     }).join(",");
   }
 
-  List<_FieldMeta> _getFields(ClassElement clazz, AutoCopyWith copyWith) {
+  List<_FieldMeta> _getFields(ClassElement clazz, CopyWith copyWith) {
     final data = <_FieldMeta>[];
     if (clazz.supertype?.isDartCoreObject == false) {
       final parent = clazz.supertype!.element2;
@@ -85,7 +85,7 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
     return data;
   }
 
-  bool _shouldIncludeField(FieldElement field, AutoCopyWith copyWith) {
+  bool _shouldIncludeField(FieldElement field, CopyWith copyWith) {
     if (field.isStatic) {
       // ignore static fields
       return false;
@@ -148,17 +148,17 @@ class _FieldMetaBuilder {
   late bool _isNullable;
 }
 
-IgnoreCopyWith? _getIgnoreAnnotation(FieldElement field) {
-  if (TypeChecker.fromRuntime(IgnoreCopyWith).hasAnnotationOf(field)) {
-    return const IgnoreCopyWith();
+Ignore? _getIgnoreAnnotation(FieldElement field) {
+  if (TypeChecker.fromRuntime(Ignore).hasAnnotationOf(field)) {
+    return const Ignore();
   } else {
     return null;
   }
 }
 
-KeepCopyWith? _getKeepAnnotation(FieldElement field) {
-  if (TypeChecker.fromRuntime(KeepCopyWith).hasAnnotationOf(field)) {
-    return const KeepCopyWith();
+Keep? _getKeepAnnotation(FieldElement field) {
+  if (TypeChecker.fromRuntime(Keep).hasAnnotationOf(field)) {
+    return const Keep();
   } else {
     return null;
   }
