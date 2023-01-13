@@ -4,6 +4,8 @@ import 'package:build/build.dart';
 import 'package:copy_with/copy_with.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'util.dart';
+
 class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
   const CopyWithGenerator();
 
@@ -17,7 +19,9 @@ class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
       print("Not a class");
       return null;
     }
-    final copyWith = CopyWith();
+    final copyWith = CopyWith(
+      parent: annotation.read("parent").stringValueOrNull,
+    );
     final clazz = element;
     final fields = _getFields(clazz, copyWith);
     if (fields.isEmpty) {
@@ -31,13 +35,35 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
 }
 """;
     } else {
+      String workerClassDef;
+      String workerClassOverrideTag;
+      if (copyWith.parent?.isNotEmpty == true) {
+        workerClassDef =
+            "abstract class \$${clazz.name}CopyWithWorker implements \$${copyWith.parent}CopyWithWorker";
+        workerClassOverrideTag = "@override\n  ";
+      } else {
+        workerClassDef = "abstract class \$${clazz.name}CopyWithWorker";
+        workerClassOverrideTag = "";
+      }
       return """
-extension \$${clazz.name}CopyWith on ${clazz.name} {
-  ${clazz.name} copyWith({${_buildParameterBody(fields)}}) => _\$copyWith(${_buildDelegateBody(fields)});
+$workerClassDef {
+  $workerClassOverrideTag${clazz.name} call({${_buildParameterBody(fields)}});
+}
 
-  ${clazz.name} _\$copyWith({${_buildParameterBody(fields)}}) {
+class _\$${clazz.name}CopyWithWorkerImpl implements \$${clazz.name}CopyWithWorker {
+  _\$${clazz.name}CopyWithWorkerImpl(this.that);
+
+  @override
+  ${clazz.name} call({${_buildImplParameterBody(fields)}}) {
     return ${clazz.name}(${_buildConstructorBody(fields)});
   }
+
+  final ${clazz.name} that;
+}
+
+extension \$${clazz.name}CopyWith on ${clazz.name} {
+  \$${clazz.name}CopyWithWorker get copyWith => _\$copyWith;
+  \$${clazz.name}CopyWithWorker get _\$copyWith => _\$${clazz.name}CopyWithWorkerImpl(this);
 }
 """;
     }
@@ -46,27 +72,25 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   String _buildParameterBody(List<_FieldMeta> fields) {
     return fields
         .where((f) => !f.isKeep)
-        .map((f) =>
-            (f.isNullable ? "Nullable<${f.typeStr}>? " : "${f.typeStr}? ") +
-            f.name)
+        .map((f) => "${f.typeStr}? ${f.name}")
         .join(",");
   }
 
-  String _buildDelegateBody(List<_FieldMeta> fields) {
+  String _buildImplParameterBody(List<_FieldMeta> fields) {
     return fields
         .where((f) => !f.isKeep)
-        .map((f) => "${f.name}: ${f.name}")
+        .map((f) => "dynamic ${f.name}${f.isNullable ? " = copyWithNull" : ""}")
         .join(",");
   }
 
   String _buildConstructorBody(List<_FieldMeta> fields) {
     return fields.map((f) {
       if (f.isKeep) {
-        return "${f.name}: ${f.name}";
+        return "${f.name}: that.${f.name}";
       } else if (f.isNullable) {
-        return "${f.name}: ${f.name} != null ? ${f.name}.obj : this.${f.name}";
+        return "${f.name}: ${f.name} == copyWithNull ? that.${f.name} : ${f.name} as ${f.typeStr}?";
       } else {
-        return "${f.name}: ${f.name} ?? this.${f.name}";
+        return "${f.name}: ${f.name} as ${f.typeStr}? ?? that.${f.name}";
       }
     }).join(",");
   }

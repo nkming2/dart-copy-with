@@ -23,49 +23,104 @@ extension \$EmptyCopyWith on Empty {
 
     test("signel field", () async {
       await expectGen("SingleField", completion("""
-extension \$SingleFieldCopyWith on SingleField {
-  SingleField copyWith({int? abc}) => _\$copyWith(abc: abc);
+abstract class \$SingleFieldCopyWithWorker {
+  SingleField call({int? abc});
+}
 
-  SingleField _\$copyWith({int? abc}) {
-    return SingleField(abc: abc ?? this.abc);
+class _\$SingleFieldCopyWithWorkerImpl implements \$SingleFieldCopyWithWorker {
+  _\$SingleFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  SingleField call({dynamic abc}) {
+    return SingleField(abc: abc as int? ?? that.abc);
   }
+
+  final SingleField that;
+}
+
+extension \$SingleFieldCopyWith on SingleField {
+  \$SingleFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$SingleFieldCopyWithWorker get _\$copyWith =>
+      _\$SingleFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("multiple fields", () async {
       await expectGen("MultipleField", completion("""
-extension \$MultipleFieldCopyWith on MultipleField {
-  MultipleField copyWith({int? abc, int? def}) =>
-      _\$copyWith(abc: abc, def: def);
+abstract class \$MultipleFieldCopyWithWorker {
+  MultipleField call({int? abc, int? def});
+}
 
-  MultipleField _\$copyWith({int? abc, int? def}) {
-    return MultipleField(abc: abc ?? this.abc, def: def ?? this.def);
+class _\$MultipleFieldCopyWithWorkerImpl
+    implements \$MultipleFieldCopyWithWorker {
+  _\$MultipleFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  MultipleField call({dynamic abc, dynamic def}) {
+    return MultipleField(
+        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
   }
+
+  final MultipleField that;
+}
+
+extension \$MultipleFieldCopyWith on MultipleField {
+  \$MultipleFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$MultipleFieldCopyWithWorker get _\$copyWith =>
+      _\$MultipleFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("nullable field", () async {
       await expectGen("NullableField", completion("""
-extension \$NullableFieldCopyWith on NullableField {
-  NullableField copyWith({Nullable<int>? abc}) => _\$copyWith(abc: abc);
+abstract class \$NullableFieldCopyWithWorker {
+  NullableField call({int? abc});
+}
 
-  NullableField _\$copyWith({Nullable<int>? abc}) {
-    return NullableField(abc: abc != null ? abc.obj : this.abc);
+class _\$NullableFieldCopyWithWorkerImpl
+    implements \$NullableFieldCopyWithWorker {
+  _\$NullableFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  NullableField call({dynamic abc = copyWithNull}) {
+    return NullableField(abc: abc == copyWithNull ? that.abc : abc as int?);
   }
+
+  final NullableField that;
+}
+
+extension \$NullableFieldCopyWith on NullableField {
+  \$NullableFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$NullableFieldCopyWithWorker get _\$copyWith =>
+      _\$NullableFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("derived class", () async {
       await expectGen("DerivedClass", completion("""
-extension \$DerivedClassCopyWith on DerivedClass {
-  DerivedClass copyWith({int? abc, int? def}) => _\$copyWith(abc: abc, def: def);
+abstract class \$DerivedClassCopyWithWorker {
+  DerivedClass call({int? abc, int? def});
+}
 
-  DerivedClass _\$copyWith({int? abc, int? def}) {
-    return DerivedClass(abc: abc ?? this.abc, def: def ?? this.def);
+class _\$DerivedClassCopyWithWorkerImpl implements \$DerivedClassCopyWithWorker {
+  _\$DerivedClassCopyWithWorkerImpl(this.that);
+
+  @override
+  DerivedClass call({dynamic abc, dynamic def}) {
+    return DerivedClass(
+        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
   }
+
+  final DerivedClass that;
+}
+
+extension \$DerivedClassCopyWith on DerivedClass {
+  \$DerivedClassCopyWithWorker get copyWith => _\$copyWith;
+  \$DerivedClassCopyWithWorker get _\$copyWith =>
+      _\$DerivedClassCopyWithWorkerImpl(this);
 }
 """));
     });
@@ -108,60 +163,156 @@ extension \$GetterCopyWith on Getter {
 
     test("template field", () async {
       await expectGen("TemplateField", completion("""
-extension \$TemplateFieldCopyWith on TemplateField {
-  TemplateField copyWith({List<int>? abc}) => _\$copyWith(abc: abc);
+abstract class \$TemplateFieldCopyWithWorker {
+  TemplateField call({List<int>? abc});
+}
 
-  TemplateField _\$copyWith({List<int>? abc}) {
-    return TemplateField(abc: abc ?? this.abc);
+class _\$TemplateFieldCopyWithWorkerImpl
+    implements \$TemplateFieldCopyWithWorker {
+  _\$TemplateFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  TemplateField call({dynamic abc}) {
+    return TemplateField(abc: abc as List<int>? ?? that.abc);
   }
+
+  final TemplateField that;
+}
+
+extension \$TemplateFieldCopyWith on TemplateField {
+  \$TemplateFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$TemplateFieldCopyWithWorker get _\$copyWith =>
+      _\$TemplateFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("function field", () async {
       await expectGen("FunctionField", completion("""
-extension \$FunctionFieldCopyWith on FunctionField {
-  FunctionField copyWith({void Function()? abc}) => _\$copyWith(abc: abc);
+abstract class \$FunctionFieldCopyWithWorker {
+  FunctionField call({void Function()? abc});
+}
 
-  FunctionField _\$copyWith({void Function()? abc}) {
-    return FunctionField(abc: abc ?? this.abc);
+class _\$FunctionFieldCopyWithWorkerImpl
+    implements \$FunctionFieldCopyWithWorker {
+  _\$FunctionFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  FunctionField call({dynamic abc}) {
+    return FunctionField(abc: abc as void Function()? ?? that.abc);
   }
+
+  final FunctionField that;
+}
+
+extension \$FunctionFieldCopyWith on FunctionField {
+  \$FunctionFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$FunctionFieldCopyWithWorker get _\$copyWith =>
+      _\$FunctionFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("alias field", () async {
       await expectGen("AliasField", completion("""
-extension \$AliasFieldCopyWith on AliasField {
-  AliasField copyWith({SuperType? abc}) => _\$copyWith(abc: abc);
+abstract class \$AliasFieldCopyWithWorker {
+  AliasField call({SuperType? abc});
+}
 
-  AliasField _\$copyWith({SuperType? abc}) {
-    return AliasField(abc: abc ?? this.abc);
+class _\$AliasFieldCopyWithWorkerImpl implements \$AliasFieldCopyWithWorker {
+  _\$AliasFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  AliasField call({dynamic abc}) {
+    return AliasField(abc: abc as SuperType? ?? that.abc);
   }
+
+  final AliasField that;
+}
+
+extension \$AliasFieldCopyWith on AliasField {
+  \$AliasFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$AliasFieldCopyWithWorker get _\$copyWith =>
+      _\$AliasFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("ignore field", () async {
       await expectGen("IgnoreField", completion("""
-extension \$IgnoreFieldCopyWith on IgnoreField {
-  IgnoreField copyWith({int? def}) => _\$copyWith(def: def);
+abstract class \$IgnoreFieldCopyWithWorker {
+  IgnoreField call({int? def});
+}
 
-  IgnoreField _\$copyWith({int? def}) {
-    return IgnoreField(def: def ?? this.def);
+class _\$IgnoreFieldCopyWithWorkerImpl implements \$IgnoreFieldCopyWithWorker {
+  _\$IgnoreFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  IgnoreField call({dynamic def}) {
+    return IgnoreField(def: def as int? ?? that.def);
   }
+
+  final IgnoreField that;
+}
+
+extension \$IgnoreFieldCopyWith on IgnoreField {
+  \$IgnoreFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$IgnoreFieldCopyWithWorker get _\$copyWith =>
+      _\$IgnoreFieldCopyWithWorkerImpl(this);
 }
 """));
     });
 
     test("keep field", () async {
       await expectGen("KeepField", completion("""
-extension \$KeepFieldCopyWith on KeepField {
-  KeepField copyWith({int? def}) => _\$copyWith(def: def);
+abstract class \$KeepFieldCopyWithWorker {
+  KeepField call({int? def});
+}
 
-  KeepField _\$copyWith({int? def}) {
-    return KeepField(abc: abc, def: def ?? this.def);
+class _\$KeepFieldCopyWithWorkerImpl implements \$KeepFieldCopyWithWorker {
+  _\$KeepFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  KeepField call({dynamic def}) {
+    return KeepField(abc: that.abc, def: def as int? ?? that.def);
   }
+
+  final KeepField that;
+}
+
+extension \$KeepFieldCopyWith on KeepField {
+  \$KeepFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$KeepFieldCopyWithWorker get _\$copyWith =>
+      _\$KeepFieldCopyWithWorkerImpl(this);
+}
+"""));
+    });
+
+    test("polymorphic call", () async {
+      await expectGen("PolymorphicCall", completion("""
+abstract class \$PolymorphicCallCopyWithWorker
+    implements \$PolymorphicCallBaseCopyWithWorker {
+  @override
+  PolymorphicCall call({int? abc, int? def});
+}
+
+class _\$PolymorphicCallCopyWithWorkerImpl
+    implements \$PolymorphicCallCopyWithWorker {
+  _\$PolymorphicCallCopyWithWorkerImpl(this.that);
+
+  @override
+  PolymorphicCall call({dynamic abc, dynamic def}) {
+    return PolymorphicCall(
+        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
+  }
+
+  final PolymorphicCall that;
+}
+
+extension \$PolymorphicCallCopyWith on PolymorphicCall {
+  \$PolymorphicCallCopyWithWorker get copyWith => _\$copyWith;
+  \$PolymorphicCallCopyWithWorker get _\$copyWith =>
+      _\$PolymorphicCallCopyWithWorkerImpl(this);
 }
 """));
     });

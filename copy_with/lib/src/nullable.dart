@@ -1,6 +1,12 @@
-/// To hold optional arguments that themselves could be null
-class Nullable<T> {
-  const Nullable(this.obj);
+/// Used internally as a placeholder for a nullable field
+class NullArg {
+  const NullArg();
 
-  final T? obj;
+  @override
+  bool operator ==(Object other) => other is NullArg;
+
+  @override
+  int get hashCode => 0;
 }
+
+const copyWithNull = NullArg();

@@ -1,5 +1,9 @@
 class CopyWith {
-  const CopyWith();
+  const CopyWith({
+    this.parent,
+  });
+
+  final String? parent;
 }
 
 class Ignore {

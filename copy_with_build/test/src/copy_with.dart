@@ -94,4 +94,18 @@ class KeepField {
   final int def;
 }
 
+@genCopyWith
+class PolymorphicCallBase {
+  const PolymorphicCallBase({required this.abc});
+
+  final int abc;
+}
+
+@CopyWith(parent: "PolymorphicCallBase")
+class PolymorphicCall extends PolymorphicCallBase {
+  const PolymorphicCall({required super.abc, required this.def});
+
+  final int def;
+}
+
 typedef SuperType = int;

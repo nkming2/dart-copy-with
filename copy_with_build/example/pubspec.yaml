@@ -15,11 +15,12 @@ dependencies:
 
 dev_dependencies:
   build_runner: ^2.3.2
-  lints: ^2.0.0
   copy_with_build:
     git:
       url: https://gitlab.com/nkming2/dart-copy-with
       path: copy_with_build
+  lints: ^2.0.0
+  test: ^1.16.0
 
 dependency_overrides:
   copy_with:
