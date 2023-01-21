@@ -108,4 +108,12 @@ class PolymorphicCall extends PolymorphicCallBase {
   final int def;
 }
 
+@genCopyWith
+class DeepCopyField {
+  const DeepCopyField({required this.abc});
+
+  @deepCopy
+  final List<int> abc;
+}
+
 typedef SuperType = int;

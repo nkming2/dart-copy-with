@@ -1,5 +1,6 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:copy_with/copy_with.dart';
 import 'package:source_gen/source_gen.dart';
@@ -86,13 +87,26 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   String _buildConstructorBody(List<_FieldMeta> fields) {
     return fields.map((f) {
       if (f.isKeep) {
-        return "${f.name}: that.${f.name}";
+        return "${f.name}: ${_buildCopyOf(f, "that")}";
       } else if (f.isNullable) {
-        return "${f.name}: ${f.name} == copyWithNull ? that.${f.name} : ${f.name} as ${f.typeStr}?";
+        return "${f.name}: ${f.name} == copyWithNull ? ${_buildCopyOf(f, "that")} : ${f.name} as ${f.typeStr}?";
       } else {
-        return "${f.name}: ${f.name} as ${f.typeStr}? ?? that.${f.name}";
+        return "${f.name}: ${f.name} as ${f.typeStr}? ?? ${_buildCopyOf(f, "that")}";
       }
     }).join(",");
+  }
+
+  String _buildCopyOf(_FieldMeta field, String inst) {
+    if (field.isDeepCopy) {
+      if (TypeChecker.fromRuntime(List).isExactlyType(field.type)) {
+        return "List.of($inst.${field.name})";
+      } else if (TypeChecker.fromRuntime(Map).isExactlyType(field.type)) {
+        return "Map.of($inst.${field.name})";
+      } else if (TypeChecker.fromRuntime(Set).isExactlyType(field.type)) {
+        return "Set.of($inst.${field.name})";
+      }
+    }
+    return "$inst.${field.name}";
   }
 
   List<_FieldMeta> _getFields(ClassElement clazz, CopyWith copyWith) {
@@ -134,15 +148,19 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
 class _FieldMeta {
   const _FieldMeta({
     required this.name,
+    required this.type,
     required this.typeStr,
     required this.isNullable,
     required this.isKeep,
+    required this.isDeepCopy,
   });
 
   final String name;
+  final DartType type;
   final String typeStr;
   final bool isNullable;
   final bool isKeep;
+  final bool isDeepCopy;
 }
 
 class _FieldMetaBuilder {
@@ -151,9 +169,11 @@ class _FieldMetaBuilder {
     final typeStr = _parseTypeString(field);
     return _FieldMeta(
       name: field.name,
+      type: field.type,
       typeStr: typeStr,
       isNullable: _isNullable,
       isKeep: _getKeepAnnotation(field) != null,
+      isDeepCopy: _getDeepCopyAnnotation(field) != null,
     );
   }
 
@@ -183,6 +203,14 @@ Ignore? _getIgnoreAnnotation(FieldElement field) {
 Keep? _getKeepAnnotation(FieldElement field) {
   if (TypeChecker.fromRuntime(Keep).hasAnnotationOf(field)) {
     return const Keep();
+  } else {
+    return null;
+  }
+}
+
+DeepCopy? _getDeepCopyAnnotation(FieldElement field) {
+  if (TypeChecker.fromRuntime(DeepCopy).hasAnnotationOf(field)) {
+    return const DeepCopy();
   } else {
     return null;
   }

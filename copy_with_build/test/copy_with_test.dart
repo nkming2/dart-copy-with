@@ -316,5 +316,31 @@ extension \$PolymorphicCallCopyWith on PolymorphicCall {
 }
 """));
     });
+
+    test("deep copy field", () async {
+      await expectGen("DeepCopyField", completion("""
+abstract class \$DeepCopyFieldCopyWithWorker {
+  DeepCopyField call({List<int>? abc});
+}
+
+class _\$DeepCopyFieldCopyWithWorkerImpl
+    implements \$DeepCopyFieldCopyWithWorker {
+  _\$DeepCopyFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  DeepCopyField call({dynamic abc}) {
+    return DeepCopyField(abc: abc as List<int>? ?? List.of(that.abc));
+  }
+
+  final DeepCopyField that;
+}
+
+extension \$DeepCopyFieldCopyWith on DeepCopyField {
+  \$DeepCopyFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$DeepCopyFieldCopyWithWorker get _\$copyWith =>
+      _\$DeepCopyFieldCopyWithWorkerImpl(this);
+}
+"""));
+    });
   });
 }
