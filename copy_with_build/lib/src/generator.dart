@@ -7,6 +7,17 @@ import 'package:source_gen/source_gen.dart';
 
 import 'util.dart';
 
+class CopyWithLintRuleGenerator extends Generator {
+  @override
+  String? generate(LibraryReader library, BuildStep buildStep) {
+    if (library.annotatedWith(TypeChecker.fromRuntime(CopyWith)).isNotEmpty) {
+      return "// ignore_for_file: library_private_types_in_public_api, duplicate_ignore";
+    } else {
+      return null;
+    }
+  }
+}
+
 class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
   const CopyWithGenerator();
 
