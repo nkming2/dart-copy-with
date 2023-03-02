@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field
 
 import 'package:copy_with/copy_with.dart';
+import 'type.dart' as type;
 
 @genCopyWith
 class Empty {}
@@ -114,6 +115,13 @@ class DeepCopyField {
 
   @deepCopy
   final List<int> abc;
+}
+
+@genCopyWith
+class PrefixedTypeField {
+  const PrefixedTypeField({required this.abc});
+
+  final type.MyType abc;
 }
 
 typedef SuperType = int;

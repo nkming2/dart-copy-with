@@ -342,5 +342,31 @@ extension \$DeepCopyFieldCopyWith on DeepCopyField {
 }
 """));
     });
+
+    test("prefixed type field", () async {
+      await expectGen("PrefixedTypeField", completion("""
+abstract class \$PrefixedTypeFieldCopyWithWorker {
+  PrefixedTypeField call({type.MyType? abc});
+}
+
+class _\$PrefixedTypeFieldCopyWithWorkerImpl
+    implements \$PrefixedTypeFieldCopyWithWorker {
+  _\$PrefixedTypeFieldCopyWithWorkerImpl(this.that);
+
+  @override
+  PrefixedTypeField call({dynamic abc}) {
+    return PrefixedTypeField(abc: abc as type.MyType? ?? that.abc);
+  }
+
+  final PrefixedTypeField that;
+}
+
+extension \$PrefixedTypeFieldCopyWith on PrefixedTypeField {
+  \$PrefixedTypeFieldCopyWithWorker get copyWith => _\$copyWith;
+  \$PrefixedTypeFieldCopyWithWorker get _\$copyWith =>
+      _\$PrefixedTypeFieldCopyWithWorkerImpl(this);
+}
+"""));
+    });
   });
 }

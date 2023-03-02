@@ -1,0 +1,3 @@
+class MyType {
+  const MyType();
+}
