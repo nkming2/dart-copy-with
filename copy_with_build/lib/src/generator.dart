@@ -1,4 +1,3 @@
-import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -37,7 +36,7 @@ class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
       parent: annotation.read("parent").stringValueOrNull,
     );
     final clazz = element;
-    final fields = await _getFields(clazz, copyWith);
+    final fields = await _getFields(buildStep.resolver, clazz, copyWith);
     if (fields.isEmpty) {
       return """
 extension \$${clazz.name}CopyWith on ${clazz.name} {
@@ -123,15 +122,15 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   }
 
   Future<List<_FieldMeta>> _getFields(
-      ClassElement clazz, CopyWith copyWith) async {
+      Resolver resolver, ClassElement clazz, CopyWith copyWith) async {
     final data = <_FieldMeta>[];
     if (clazz.supertype?.isDartCoreObject == false) {
       final parent = clazz.supertype!.element2;
-      data.addAll(await _getFields(parent as ClassElement, copyWith));
+      data.addAll(await _getFields(resolver, parent as ClassElement, copyWith));
     }
     for (final f
         in clazz.fields.where((f) => _shouldIncludeField(f, copyWith))) {
-      final meta = await _FieldMetaBuilder().build(f);
+      final meta = await _FieldMetaBuilder().build(resolver, f);
       data.add(meta);
     }
     return data;
@@ -178,9 +177,9 @@ class _FieldMeta {
 }
 
 class _FieldMetaBuilder {
-  Future<_FieldMeta> build(FieldElement field) async {
+  Future<_FieldMeta> build(Resolver resolver, FieldElement field) async {
     _parseNullable(field);
-    final typeStr = await _parseTypeString(field);
+    final typeStr = await _parseTypeString(resolver, field);
     return _FieldMeta(
       name: field.name,
       type: field.type,
@@ -195,15 +194,12 @@ class _FieldMetaBuilder {
     _isNullable = field.type.nullabilitySuffix == NullabilitySuffix.question;
   }
 
-  Future<String> _parseTypeString(FieldElement field) async {
+  Future<String> _parseTypeString(Resolver resolver, FieldElement field) async {
     if (field.type.alias != null) {
       return field.type.alias!.element.name;
     } else {
-      final lib =
-          await field.session!.getResolvedLibraryByElement(field.library);
-      final declaration =
-          (lib as ResolvedLibraryResult).getElementDeclaration(field);
-      final typeStr = declaration!.node.parent!.childEntities
+      final astNode = await resolver.astNodeFor(field, resolve: true);
+      final typeStr = astNode!.parent!.childEntities
           .firstWhere((e) => e is TypeAnnotation)
           .toString();
       if (typeStr.endsWith("?")) {

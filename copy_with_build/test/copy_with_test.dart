@@ -1,34 +1,53 @@
-import 'package:code_gen_tester/code_gen_tester.dart';
+import 'dart:io';
+
+import 'package:build/build.dart';
+import 'package:build_test/build_test.dart';
 import 'package:copy_with_build/src/generator.dart';
+import 'package:path/path.dart' as p;
+import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final tester = SourceGenTester.fromPath("test/src/copy_with.dart");
-  final generator = CopyWithGenerator();
-  Future<void> expectGen(String name, Matcher matcher) async =>
-      expectGenerateNamed(await tester, name, generator, matcher);
+  _resolveCompilationUnit("test/src/copy_with.dart");
+  tearDown(() {
+    // Increment this after each test so the next test has it's own package
+    _pkgCacheCount++;
+  });
 
   group("CopyWith", () {
     test("empty", () async {
-      await expectGen("Empty", completion("""
-extension \$EmptyCopyWith on Empty {
-  Empty copyWith() => _\$copyWith();
+      final src = _genSrc("""
+@genCopyWith
+class Empty {}
+""");
+      final expected = _genExpected(r"""
+extension $EmptyCopyWith on Empty {
+  Empty copyWith() => _$copyWith();
 
-  Empty _\$copyWith() {
+  Empty _$copyWith() {
     return Empty();
   }
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
-    test("signel field", () async {
-      await expectGen("SingleField", completion("""
-abstract class \$SingleFieldCopyWithWorker {
+    test("single field", () async {
+      final src = _genSrc("""
+@genCopyWith
+class SingleField {
+  const SingleField({required this.abc});
+
+  final int abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $SingleFieldCopyWithWorker {
   SingleField call({int? abc});
 }
 
-class _\$SingleFieldCopyWithWorkerImpl implements \$SingleFieldCopyWithWorker {
-  _\$SingleFieldCopyWithWorkerImpl(this.that);
+class _$SingleFieldCopyWithWorkerImpl implements $SingleFieldCopyWithWorker {
+  _$SingleFieldCopyWithWorkerImpl(this.that);
 
   @override
   SingleField call({dynamic abc}) {
@@ -38,23 +57,34 @@ class _\$SingleFieldCopyWithWorkerImpl implements \$SingleFieldCopyWithWorker {
   final SingleField that;
 }
 
-extension \$SingleFieldCopyWith on SingleField {
-  \$SingleFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$SingleFieldCopyWithWorker get _\$copyWith =>
-      _\$SingleFieldCopyWithWorkerImpl(this);
+extension $SingleFieldCopyWith on SingleField {
+  $SingleFieldCopyWithWorker get copyWith => _$copyWith;
+  $SingleFieldCopyWithWorker get _$copyWith =>
+      _$SingleFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("multiple fields", () async {
-      await expectGen("MultipleField", completion("""
-abstract class \$MultipleFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class MultipleField {
+  const MultipleField({required this.abc, required this.def});
+
+  final int abc;
+  final int def;
+}
+""");
+
+      final expected = _genExpected(r"""
+abstract class $MultipleFieldCopyWithWorker {
   MultipleField call({int? abc, int? def});
 }
 
-class _\$MultipleFieldCopyWithWorkerImpl
-    implements \$MultipleFieldCopyWithWorker {
-  _\$MultipleFieldCopyWithWorkerImpl(this.that);
+class _$MultipleFieldCopyWithWorkerImpl
+    implements $MultipleFieldCopyWithWorker {
+  _$MultipleFieldCopyWithWorkerImpl(this.that);
 
   @override
   MultipleField call({dynamic abc, dynamic def}) {
@@ -65,23 +95,32 @@ class _\$MultipleFieldCopyWithWorkerImpl
   final MultipleField that;
 }
 
-extension \$MultipleFieldCopyWith on MultipleField {
-  \$MultipleFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$MultipleFieldCopyWithWorker get _\$copyWith =>
-      _\$MultipleFieldCopyWithWorkerImpl(this);
+extension $MultipleFieldCopyWith on MultipleField {
+  $MultipleFieldCopyWithWorker get copyWith => _$copyWith;
+  $MultipleFieldCopyWithWorker get _$copyWith =>
+      _$MultipleFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("nullable field", () async {
-      await expectGen("NullableField", completion("""
-abstract class \$NullableFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class NullableField {
+  NullableField({required this.abc});
+
+  int? abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $NullableFieldCopyWithWorker {
   NullableField call({int? abc});
 }
 
-class _\$NullableFieldCopyWithWorkerImpl
-    implements \$NullableFieldCopyWithWorker {
-  _\$NullableFieldCopyWithWorkerImpl(this.that);
+class _$NullableFieldCopyWithWorkerImpl
+    implements $NullableFieldCopyWithWorker {
+  _$NullableFieldCopyWithWorkerImpl(this.that);
 
   @override
   NullableField call({dynamic abc = copyWithNull}) {
@@ -91,22 +130,37 @@ class _\$NullableFieldCopyWithWorkerImpl
   final NullableField that;
 }
 
-extension \$NullableFieldCopyWith on NullableField {
-  \$NullableFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$NullableFieldCopyWithWorker get _\$copyWith =>
-      _\$NullableFieldCopyWithWorkerImpl(this);
+extension $NullableFieldCopyWith on NullableField {
+  $NullableFieldCopyWithWorker get copyWith => _$copyWith;
+  $NullableFieldCopyWithWorker get _$copyWith =>
+      _$NullableFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("derived class", () async {
-      await expectGen("DerivedClass", completion("""
-abstract class \$DerivedClassCopyWithWorker {
+      final src = _genSrc("""
+class BaseClass {
+  const BaseClass({required this.abc});
+
+  final int abc;
+}
+
+@genCopyWith
+class DerivedClass extends BaseClass {
+  const DerivedClass({required super.abc, required this.def});
+
+  final int def;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $DerivedClassCopyWithWorker {
   DerivedClass call({int? abc, int? def});
 }
 
-class _\$DerivedClassCopyWithWorkerImpl implements \$DerivedClassCopyWithWorker {
-  _\$DerivedClassCopyWithWorkerImpl(this.that);
+class _$DerivedClassCopyWithWorkerImpl implements $DerivedClassCopyWithWorker {
+  _$DerivedClassCopyWithWorkerImpl(this.that);
 
   @override
   DerivedClass call({dynamic abc, dynamic def}) {
@@ -117,59 +171,89 @@ class _\$DerivedClassCopyWithWorkerImpl implements \$DerivedClassCopyWithWorker 
   final DerivedClass that;
 }
 
-extension \$DerivedClassCopyWith on DerivedClass {
-  \$DerivedClassCopyWithWorker get copyWith => _\$copyWith;
-  \$DerivedClassCopyWithWorker get _\$copyWith =>
-      _\$DerivedClassCopyWithWorkerImpl(this);
+extension $DerivedClassCopyWith on DerivedClass {
+  $DerivedClassCopyWithWorker get copyWith => _$copyWith;
+  $DerivedClassCopyWithWorker get _$copyWith =>
+      _$DerivedClassCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("static field", () async {
-      await expectGen("StaticField", completion("""
-extension \$StaticFieldCopyWith on StaticField {
-  StaticField copyWith() => _\$copyWith();
+      final src = _genSrc("""
+@genCopyWith
+class StaticField {
+  static final int abc = 1;
+}
+""");
+      final expected = _genExpected(r"""
+extension $StaticFieldCopyWith on StaticField {
+  StaticField copyWith() => _$copyWith();
 
-  StaticField _\$copyWith() {
+  StaticField _$copyWith() {
     return StaticField();
   }
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("private field", () async {
-      await expectGen("PrivateField", completion("""
-extension \$PrivateFieldCopyWith on PrivateField {
-  PrivateField copyWith() => _\$copyWith();
+      final src = _genSrc("""
+@genCopyWith
+class PrivateField {
+  final int _abc = 1;
+}
+""");
+      final expected = _genExpected(r"""
+extension $PrivateFieldCopyWith on PrivateField {
+  PrivateField copyWith() => _$copyWith();
 
-  PrivateField _\$copyWith() {
+  PrivateField _$copyWith() {
     return PrivateField();
   }
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("getter", () async {
-      await expectGen("Getter", completion("""
-extension \$GetterCopyWith on Getter {
-  Getter copyWith() => _\$copyWith();
+      final src = _genSrc("""
+@genCopyWith
+class Getter {
+  int get abc => 1;
+}
+""");
+      final expected = _genExpected(r"""
+extension $GetterCopyWith on Getter {
+  Getter copyWith() => _$copyWith();
 
-  Getter _\$copyWith() {
+  Getter _$copyWith() {
     return Getter();
   }
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("template field", () async {
-      await expectGen("TemplateField", completion("""
-abstract class \$TemplateFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class TemplateField {
+  const TemplateField({required this.abc});
+
+  final List<int> abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $TemplateFieldCopyWithWorker {
   TemplateField call({List<int>? abc});
 }
 
-class _\$TemplateFieldCopyWithWorkerImpl
-    implements \$TemplateFieldCopyWithWorker {
-  _\$TemplateFieldCopyWithWorkerImpl(this.that);
+class _$TemplateFieldCopyWithWorkerImpl
+    implements $TemplateFieldCopyWithWorker {
+  _$TemplateFieldCopyWithWorkerImpl(this.that);
 
   @override
   TemplateField call({dynamic abc}) {
@@ -179,23 +263,32 @@ class _\$TemplateFieldCopyWithWorkerImpl
   final TemplateField that;
 }
 
-extension \$TemplateFieldCopyWith on TemplateField {
-  \$TemplateFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$TemplateFieldCopyWithWorker get _\$copyWith =>
-      _\$TemplateFieldCopyWithWorkerImpl(this);
+extension $TemplateFieldCopyWith on TemplateField {
+  $TemplateFieldCopyWithWorker get copyWith => _$copyWith;
+  $TemplateFieldCopyWithWorker get _$copyWith =>
+      _$TemplateFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("function field", () async {
-      await expectGen("FunctionField", completion("""
-abstract class \$FunctionFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class FunctionField {
+  const FunctionField({required this.abc});
+
+  final void Function() abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $FunctionFieldCopyWithWorker {
   FunctionField call({void Function()? abc});
 }
 
-class _\$FunctionFieldCopyWithWorkerImpl
-    implements \$FunctionFieldCopyWithWorker {
-  _\$FunctionFieldCopyWithWorkerImpl(this.that);
+class _$FunctionFieldCopyWithWorkerImpl
+    implements $FunctionFieldCopyWithWorker {
+  _$FunctionFieldCopyWithWorkerImpl(this.that);
 
   @override
   FunctionField call({dynamic abc}) {
@@ -205,22 +298,33 @@ class _\$FunctionFieldCopyWithWorkerImpl
   final FunctionField that;
 }
 
-extension \$FunctionFieldCopyWith on FunctionField {
-  \$FunctionFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$FunctionFieldCopyWithWorker get _\$copyWith =>
-      _\$FunctionFieldCopyWithWorkerImpl(this);
+extension $FunctionFieldCopyWith on FunctionField {
+  $FunctionFieldCopyWithWorker get copyWith => _$copyWith;
+  $FunctionFieldCopyWithWorker get _$copyWith =>
+      _$FunctionFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("alias field", () async {
-      await expectGen("AliasField", completion("""
-abstract class \$AliasFieldCopyWithWorker {
+      final src = _genSrc("""
+typedef SuperType = int;
+
+@genCopyWith
+class AliasField {
+  const AliasField({required this.abc});
+
+  final SuperType abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $AliasFieldCopyWithWorker {
   AliasField call({SuperType? abc});
 }
 
-class _\$AliasFieldCopyWithWorkerImpl implements \$AliasFieldCopyWithWorker {
-  _\$AliasFieldCopyWithWorkerImpl(this.that);
+class _$AliasFieldCopyWithWorkerImpl implements $AliasFieldCopyWithWorker {
+  _$AliasFieldCopyWithWorkerImpl(this.that);
 
   @override
   AliasField call({dynamic abc}) {
@@ -230,22 +334,33 @@ class _\$AliasFieldCopyWithWorkerImpl implements \$AliasFieldCopyWithWorker {
   final AliasField that;
 }
 
-extension \$AliasFieldCopyWith on AliasField {
-  \$AliasFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$AliasFieldCopyWithWorker get _\$copyWith =>
-      _\$AliasFieldCopyWithWorkerImpl(this);
+extension $AliasFieldCopyWith on AliasField {
+  $AliasFieldCopyWithWorker get copyWith => _$copyWith;
+  $AliasFieldCopyWithWorker get _$copyWith =>
+      _$AliasFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("ignore field", () async {
-      await expectGen("IgnoreField", completion("""
-abstract class \$IgnoreFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class IgnoreField {
+  const IgnoreField({this.abc = 0, required this.def});
+
+  @ignore
+  final int abc;
+  final int def;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $IgnoreFieldCopyWithWorker {
   IgnoreField call({int? def});
 }
 
-class _\$IgnoreFieldCopyWithWorkerImpl implements \$IgnoreFieldCopyWithWorker {
-  _\$IgnoreFieldCopyWithWorkerImpl(this.that);
+class _$IgnoreFieldCopyWithWorkerImpl implements $IgnoreFieldCopyWithWorker {
+  _$IgnoreFieldCopyWithWorkerImpl(this.that);
 
   @override
   IgnoreField call({dynamic def}) {
@@ -255,22 +370,33 @@ class _\$IgnoreFieldCopyWithWorkerImpl implements \$IgnoreFieldCopyWithWorker {
   final IgnoreField that;
 }
 
-extension \$IgnoreFieldCopyWith on IgnoreField {
-  \$IgnoreFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$IgnoreFieldCopyWithWorker get _\$copyWith =>
-      _\$IgnoreFieldCopyWithWorkerImpl(this);
+extension $IgnoreFieldCopyWith on IgnoreField {
+  $IgnoreFieldCopyWithWorker get copyWith => _$copyWith;
+  $IgnoreFieldCopyWithWorker get _$copyWith =>
+      _$IgnoreFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("keep field", () async {
-      await expectGen("KeepField", completion("""
-abstract class \$KeepFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class KeepField {
+  const KeepField({required this.abc, required this.def});
+
+  @keep
+  final int abc;
+  final int def;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $KeepFieldCopyWithWorker {
   KeepField call({int? def});
 }
 
-class _\$KeepFieldCopyWithWorkerImpl implements \$KeepFieldCopyWithWorker {
-  _\$KeepFieldCopyWithWorkerImpl(this.that);
+class _$KeepFieldCopyWithWorkerImpl implements $KeepFieldCopyWithWorker {
+  _$KeepFieldCopyWithWorkerImpl(this.that);
 
   @override
   KeepField call({dynamic def}) {
@@ -280,25 +406,63 @@ class _\$KeepFieldCopyWithWorkerImpl implements \$KeepFieldCopyWithWorker {
   final KeepField that;
 }
 
-extension \$KeepFieldCopyWith on KeepField {
-  \$KeepFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$KeepFieldCopyWithWorker get _\$copyWith =>
-      _\$KeepFieldCopyWithWorkerImpl(this);
+extension $KeepFieldCopyWith on KeepField {
+  $KeepFieldCopyWithWorker get copyWith => _$copyWith;
+  $KeepFieldCopyWithWorker get _$copyWith =>
+      _$KeepFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("polymorphic call", () async {
-      await expectGen("PolymorphicCall", completion("""
-abstract class \$PolymorphicCallCopyWithWorker
-    implements \$PolymorphicCallBaseCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class PolymorphicCallBase {
+  const PolymorphicCallBase({required this.abc});
+
+  final int abc;
+}
+
+@CopyWith(parent: "PolymorphicCallBase")
+class PolymorphicCall extends PolymorphicCallBase {
+  const PolymorphicCall({required super.abc, required this.def});
+
+  final int def;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $PolymorphicCallBaseCopyWithWorker {
+  PolymorphicCallBase call({int? abc});
+}
+
+class _$PolymorphicCallBaseCopyWithWorkerImpl
+    implements $PolymorphicCallBaseCopyWithWorker {
+  _$PolymorphicCallBaseCopyWithWorkerImpl(this.that);
+
+  @override
+  PolymorphicCallBase call({dynamic abc}) {
+    return PolymorphicCallBase(abc: abc as int? ?? that.abc);
+  }
+
+  final PolymorphicCallBase that;
+}
+
+extension $PolymorphicCallBaseCopyWith on PolymorphicCallBase {
+  $PolymorphicCallBaseCopyWithWorker get copyWith => _$copyWith;
+  $PolymorphicCallBaseCopyWithWorker get _$copyWith =>
+      _$PolymorphicCallBaseCopyWithWorkerImpl(this);
+}
+
+abstract class $PolymorphicCallCopyWithWorker
+    implements $PolymorphicCallBaseCopyWithWorker {
   @override
   PolymorphicCall call({int? abc, int? def});
 }
 
-class _\$PolymorphicCallCopyWithWorkerImpl
-    implements \$PolymorphicCallCopyWithWorker {
-  _\$PolymorphicCallCopyWithWorkerImpl(this.that);
+class _$PolymorphicCallCopyWithWorkerImpl
+    implements $PolymorphicCallCopyWithWorker {
+  _$PolymorphicCallCopyWithWorkerImpl(this.that);
 
   @override
   PolymorphicCall call({dynamic abc, dynamic def}) {
@@ -309,23 +473,33 @@ class _\$PolymorphicCallCopyWithWorkerImpl
   final PolymorphicCall that;
 }
 
-extension \$PolymorphicCallCopyWith on PolymorphicCall {
-  \$PolymorphicCallCopyWithWorker get copyWith => _\$copyWith;
-  \$PolymorphicCallCopyWithWorker get _\$copyWith =>
-      _\$PolymorphicCallCopyWithWorkerImpl(this);
+extension $PolymorphicCallCopyWith on PolymorphicCall {
+  $PolymorphicCallCopyWithWorker get copyWith => _$copyWith;
+  $PolymorphicCallCopyWithWorker get _$copyWith =>
+      _$PolymorphicCallCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("deep copy field", () async {
-      await expectGen("DeepCopyField", completion("""
-abstract class \$DeepCopyFieldCopyWithWorker {
+      final src = _genSrc("""
+@genCopyWith
+class DeepCopyField {
+  const DeepCopyField({required this.abc});
+
+  @deepCopy
+  final List<int> abc;
+}
+""");
+      final expected = _genExpected(r"""
+abstract class $DeepCopyFieldCopyWithWorker {
   DeepCopyField call({List<int>? abc});
 }
 
-class _\$DeepCopyFieldCopyWithWorkerImpl
-    implements \$DeepCopyFieldCopyWithWorker {
-  _\$DeepCopyFieldCopyWithWorkerImpl(this.that);
+class _$DeepCopyFieldCopyWithWorkerImpl
+    implements $DeepCopyFieldCopyWithWorker {
+  _$DeepCopyFieldCopyWithWorkerImpl(this.that);
 
   @override
   DeepCopyField call({dynamic abc}) {
@@ -335,23 +509,36 @@ class _\$DeepCopyFieldCopyWithWorkerImpl
   final DeepCopyField that;
 }
 
-extension \$DeepCopyFieldCopyWith on DeepCopyField {
-  \$DeepCopyFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$DeepCopyFieldCopyWithWorker get _\$copyWith =>
-      _\$DeepCopyFieldCopyWithWorkerImpl(this);
+extension $DeepCopyFieldCopyWith on DeepCopyField {
+  $DeepCopyFieldCopyWithWorker get copyWith => _$copyWith;
+  $DeepCopyFieldCopyWithWorker get _$copyWith =>
+      _$DeepCopyFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return _buildTest(src, expected);
     });
 
     test("prefixed type field", () async {
-      await expectGen("PrefixedTypeField", completion("""
-abstract class \$PrefixedTypeFieldCopyWithWorker {
+      final src = """
+import 'package:copy_with/copy_with.dart';
+import 'type.dart' as type;
+part 'test.g.dart';
+
+@genCopyWith
+class PrefixedTypeField {
+  const PrefixedTypeField({required this.abc});
+
+  final type.MyType abc;
+}
+""";
+      final expected = _genExpected(r"""
+abstract class $PrefixedTypeFieldCopyWithWorker {
   PrefixedTypeField call({type.MyType? abc});
 }
 
-class _\$PrefixedTypeFieldCopyWithWorkerImpl
-    implements \$PrefixedTypeFieldCopyWithWorker {
-  _\$PrefixedTypeFieldCopyWithWorkerImpl(this.that);
+class _$PrefixedTypeFieldCopyWithWorkerImpl
+    implements $PrefixedTypeFieldCopyWithWorker {
+  _$PrefixedTypeFieldCopyWithWorkerImpl(this.that);
 
   @override
   PrefixedTypeField call({dynamic abc}) {
@@ -361,12 +548,67 @@ class _\$PrefixedTypeFieldCopyWithWorkerImpl
   final PrefixedTypeField that;
 }
 
-extension \$PrefixedTypeFieldCopyWith on PrefixedTypeField {
-  \$PrefixedTypeFieldCopyWithWorker get copyWith => _\$copyWith;
-  \$PrefixedTypeFieldCopyWithWorker get _\$copyWith =>
-      _\$PrefixedTypeFieldCopyWithWorkerImpl(this);
+extension $PrefixedTypeFieldCopyWith on PrefixedTypeField {
+  $PrefixedTypeFieldCopyWithWorker get copyWith => _$copyWith;
+  $PrefixedTypeFieldCopyWithWorker get _$copyWith =>
+      _$PrefixedTypeFieldCopyWithWorkerImpl(this);
 }
-"""));
+""");
+      return testBuilder(
+        PartBuilder([CopyWithGenerator()], ".g.dart"),
+        {
+          "$_pkgName|lib/test.dart": src,
+          "$_pkgName|lib/type.dart": "class MyType {}",
+        },
+        generateFor: {'$_pkgName|lib/test.dart'},
+        outputs: {"$_pkgName|lib/test.g.dart": decodedMatches(expected)},
+      );
     });
   });
 }
+
+String _genSrc(String src) {
+  return """
+import 'package:copy_with/copy_with.dart';
+part 'test.g.dart';
+$src
+""";
+}
+
+String _genExpected(String src) {
+  return """// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'test.dart';
+
+// **************************************************************************
+// CopyWithGenerator
+// **************************************************************************
+
+$src""";
+}
+
+Future _buildTest(String src, String expected) {
+  return testBuilder(
+    PartBuilder([CopyWithGenerator()], ".g.dart"),
+    {"$_pkgName|lib/test.dart": src},
+    generateFor: {'$_pkgName|lib/test.dart'},
+    outputs: {"$_pkgName|lib/test.g.dart": decodedMatches(expected)},
+  );
+}
+
+// Taken from source_gen_test, unclear why this is needed...
+Future<void> _resolveCompilationUnit(String filePath) async {
+  final assetId = AssetId.parse('a|lib/${p.basename(filePath)}');
+  final files =
+      Directory(p.dirname(filePath)).listSync().whereType<File>().toList();
+
+  final fileMap = Map<String, String>.fromEntries(files.map(
+      (f) => MapEntry('a|lib/${p.basename(f.path)}', f.readAsStringSync())));
+
+  await resolveSources(fileMap, (item) async {
+    return await item.libraryFor(assetId);
+  }, resolverFor: 'a|lib/${p.basename(filePath)}');
+}
+
+String get _pkgName => 'pkg$_pkgCacheCount';
+int _pkgCacheCount = 1;

@@ -1,3 +1,0 @@
-class MyType {
-  const MyType();
-}
