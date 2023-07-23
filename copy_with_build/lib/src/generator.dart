@@ -178,6 +178,9 @@ class _FieldMeta {
 
 class _FieldMetaBuilder {
   Future<_FieldMeta> build(Resolver resolver, FieldElement field) async {
+    if (field.type.getDisplayString(withNullability: true) == "InvalidType") {
+      print("Field ${field.name} resolved as InvalidType");
+    }
     _parseNullable(field);
     final typeStr = await _parseTypeString(resolver, field);
     return _FieldMeta(
