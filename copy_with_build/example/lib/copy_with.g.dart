@@ -3,6 +3,12 @@
 part of 'copy_with.dart';
 
 // **************************************************************************
+// CopyWithLintRuleGenerator
+// **************************************************************************
+
+// ignore_for_file: library_private_types_in_public_api, duplicate_ignore
+
+// **************************************************************************
 // CopyWithGenerator
 // **************************************************************************
 
@@ -16,8 +22,9 @@ class _$BasicCopyWithWorkerImpl implements $BasicCopyWithWorker {
   @override
   Basic call({dynamic abc, dynamic def = copyWithNull}) {
     return Basic(
-        abc: abc as int? ?? that.abc,
-        def: def == copyWithNull ? that.def : def as int?);
+      abc: abc as int? ?? that.abc,
+      def: def == copyWithNull ? that.def : def as int?,
+    );
   }
 
   final Basic that;
@@ -60,7 +67,9 @@ class _$PolymorphismCopyWithWorkerImpl implements $PolymorphismCopyWithWorker {
   @override
   Polymorphism call({dynamic abc, dynamic def}) {
     return Polymorphism(
-        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
+      abc: abc as int? ?? that.abc,
+      def: def as int? ?? that.def,
+    );
   }
 
   final Polymorphism that;

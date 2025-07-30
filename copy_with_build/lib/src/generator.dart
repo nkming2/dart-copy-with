@@ -39,11 +39,11 @@ class CopyWithGenerator extends GeneratorForAnnotation<CopyWith> {
     final fields = await _getFields(buildStep.resolver, clazz, copyWith);
     if (fields.isEmpty) {
       return """
-extension \$${clazz.name}CopyWith on ${clazz.name} {
-  ${clazz.name} copyWith() => _\$copyWith();
+extension \$${clazz.displayName}CopyWith on ${clazz.displayName} {
+  ${clazz.displayName} copyWith() => _\$copyWith();
 
-  ${clazz.name} _\$copyWith() {
-    return ${clazz.name}();
+  ${clazz.displayName} _\$copyWith() {
+    return ${clazz.displayName}();
   }
 }
 """;
@@ -52,31 +52,31 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
       String workerClassOverrideTag;
       if (copyWith.parent?.isNotEmpty == true) {
         workerClassDef =
-            "abstract class \$${clazz.name}CopyWithWorker implements \$${copyWith.parent}CopyWithWorker";
+            "abstract class \$${clazz.displayName}CopyWithWorker implements \$${copyWith.parent}CopyWithWorker";
         workerClassOverrideTag = "@override\n  ";
       } else {
-        workerClassDef = "abstract class \$${clazz.name}CopyWithWorker";
+        workerClassDef = "abstract class \$${clazz.displayName}CopyWithWorker";
         workerClassOverrideTag = "";
       }
       return """
 $workerClassDef {
-  $workerClassOverrideTag${clazz.name} call({${_buildParameterBody(fields)}});
+  $workerClassOverrideTag${clazz.displayName} call({${_buildParameterBody(fields)}});
 }
 
-class _\$${clazz.name}CopyWithWorkerImpl implements \$${clazz.name}CopyWithWorker {
-  _\$${clazz.name}CopyWithWorkerImpl(this.that);
+class _\$${clazz.displayName}CopyWithWorkerImpl implements \$${clazz.displayName}CopyWithWorker {
+  _\$${clazz.displayName}CopyWithWorkerImpl(this.that);
 
   @override
-  ${clazz.name} call({${_buildImplParameterBody(fields)}}) {
-    return ${clazz.name}(${_buildConstructorBody(fields)});
+  ${clazz.displayName} call({${_buildImplParameterBody(fields)}}) {
+    return ${clazz.displayName}(${_buildConstructorBody(fields)});
   }
 
-  final ${clazz.name} that;
+  final ${clazz.displayName} that;
 }
 
-extension \$${clazz.name}CopyWith on ${clazz.name} {
-  \$${clazz.name}CopyWithWorker get copyWith => _\$copyWith;
-  \$${clazz.name}CopyWithWorker get _\$copyWith => _\$${clazz.name}CopyWithWorkerImpl(this);
+extension \$${clazz.displayName}CopyWith on ${clazz.displayName} {
+  \$${clazz.displayName}CopyWithWorker get copyWith => _\$copyWith;
+  \$${clazz.displayName}CopyWithWorker get _\$copyWith => _\$${clazz.displayName}CopyWithWorkerImpl(this);
 }
 """;
     }
@@ -97,15 +97,17 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   }
 
   String _buildConstructorBody(List<_FieldMeta> fields) {
-    return fields.map((f) {
-      if (f.isKeep) {
-        return "${f.name}: ${_buildCopyOf(f, "that")}";
-      } else if (f.isNullable) {
-        return "${f.name}: ${f.name} == copyWithNull ? ${_buildCopyOf(f, "that")} : ${f.name} as ${f.typeStr}?";
-      } else {
-        return "${f.name}: ${f.name} as ${f.typeStr}? ?? ${_buildCopyOf(f, "that")}";
-      }
-    }).join(",");
+    return fields
+        .map((f) {
+          if (f.isKeep) {
+            return "${f.name}: ${_buildCopyOf(f, "that")}";
+          } else if (f.isNullable) {
+            return "${f.name}: ${f.name} == copyWithNull ? ${_buildCopyOf(f, "that")} : ${f.name} as ${f.typeStr}?";
+          } else {
+            return "${f.name}: ${f.name} as ${f.typeStr}? ?? ${_buildCopyOf(f, "that")}";
+          }
+        })
+        .join(",");
   }
 
   String _buildCopyOf(_FieldMeta field, String inst) {
@@ -122,14 +124,18 @@ extension \$${clazz.name}CopyWith on ${clazz.name} {
   }
 
   Future<List<_FieldMeta>> _getFields(
-      Resolver resolver, ClassElement clazz, CopyWith copyWith) async {
+    Resolver resolver,
+    ClassElement clazz,
+    CopyWith copyWith,
+  ) async {
     final data = <_FieldMeta>[];
     if (clazz.supertype?.isDartCoreObject == false) {
-      final parent = clazz.supertype!.element2;
+      final parent = clazz.supertype!.element;
       data.addAll(await _getFields(resolver, parent as ClassElement, copyWith));
     }
-    for (final f
-        in clazz.fields.where((f) => _shouldIncludeField(f, copyWith))) {
+    for (final f in clazz.fields.where(
+      (f) => _shouldIncludeField(f, copyWith),
+    )) {
       final meta = await _FieldMetaBuilder().build(resolver, f);
       data.add(meta);
     }
@@ -184,7 +190,7 @@ class _FieldMetaBuilder {
     _parseNullable(field);
     final typeStr = await _parseTypeString(resolver, field);
     return _FieldMeta(
-      name: field.name,
+      name: field.displayName,
       type: field.type,
       typeStr: typeStr,
       isNullable: _isNullable,
@@ -202,9 +208,10 @@ class _FieldMetaBuilder {
       return field.type.alias!.element.name;
     } else {
       final astNode = await resolver.astNodeFor(field, resolve: true);
-      final typeStr = astNode!.parent!.childEntities
-          .firstWhere((e) => e is TypeAnnotation)
-          .toString();
+      final typeStr =
+          astNode!.parent!.childEntities
+              .firstWhere((e) => e is TypeAnnotation)
+              .toString();
       if (typeStr.endsWith("?")) {
         return typeStr.substring(0, typeStr.length - 1);
       } else {

@@ -7,8 +7,8 @@ import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
-void main() {
-  _resolveCompilationUnit("test/src/copy_with.dart");
+void main() async {
+  await _resolveCompilationUnit("test/src/copy_with.dart");
   tearDown(() {
     // Increment this after each test so the next test has it's own package
     _pkgCacheCount++;
@@ -89,7 +89,9 @@ class _$MultipleFieldCopyWithWorkerImpl
   @override
   MultipleField call({dynamic abc, dynamic def}) {
     return MultipleField(
-        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
+      abc: abc as int? ?? that.abc,
+      def: def as int? ?? that.def,
+    );
   }
 
   final MultipleField that;
@@ -165,7 +167,9 @@ class _$DerivedClassCopyWithWorkerImpl implements $DerivedClassCopyWithWorker {
   @override
   DerivedClass call({dynamic abc, dynamic def}) {
     return DerivedClass(
-        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
+      abc: abc as int? ?? that.abc,
+      def: def as int? ?? that.def,
+    );
   }
 
   final DerivedClass that;
@@ -467,7 +471,9 @@ class _$PolymorphicCallCopyWithWorkerImpl
   @override
   PolymorphicCall call({dynamic abc, dynamic def}) {
     return PolymorphicCall(
-        abc: abc as int? ?? that.abc, def: def as int? ?? that.def);
+      abc: abc as int? ?? that.abc,
+      def: def as int? ?? that.def,
+    );
   }
 
   final PolymorphicCall that;
@@ -576,7 +582,8 @@ $src
 }
 
 String _genExpected(String src) {
-  return """// GENERATED CODE - DO NOT MODIFY BY HAND
+  return """// dart format width=80
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'test.dart';
 

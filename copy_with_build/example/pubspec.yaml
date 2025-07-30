@@ -5,7 +5,7 @@ publish_to: none
 # homepage: https://www.example.com
 
 environment:
-  sdk: '>=2.18.5 <3.0.0'
+  sdk: '>=3.7.0 <4.0.0'
 
 dependencies:
   copy_with:
@@ -19,8 +19,8 @@ dev_dependencies:
     git:
       url: https://github.com/nkming2/dart-copy-with
       path: copy_with_build
-  lints: ^2.0.0
-  test: ^1.16.0
+  lints: '>=2.0.0'
+  test: any
 
 dependency_overrides:
   copy_with:
