@@ -1,6 +1,6 @@
 name: copy_with_build
 description: Generate copyWith()
-version: 1.8.1
+version: 2.0.0
 homepage: https://github.com/nkming2/dart-copy-with
 publish_to: none
 
@@ -15,7 +15,7 @@ dependencies:
     git:
       url: https://github.com/nkming2/dart-copy-with.git
       path: copy_with
-      ref: copy_with-1.4.0
+      ref: copy_with-2.0.0
   source_gen: ^2.0.0
 
 dev_dependencies:
