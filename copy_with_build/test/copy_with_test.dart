@@ -1,14 +1,9 @@
-import 'dart:io';
-
-import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
 import 'package:copy_with_build/src/generator.dart';
-import 'package:path/path.dart' as p;
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
 void main() async {
-  await _resolveCompilationUnit("test/src/copy_with.dart");
   tearDown(() {
     // Increment this after each test so the next test has it's own package
     _pkgCacheCount++;
@@ -525,18 +520,17 @@ extension $DeepCopyFieldCopyWith on DeepCopyField {
     });
 
     test("prefixed type field", () async {
-      final src = """
-import 'package:copy_with/copy_with.dart';
-import 'type.dart' as type;
-part 'test.g.dart';
-
+      final src = _genSrc(
+        """
 @genCopyWith
 class PrefixedTypeField {
   const PrefixedTypeField({required this.abc});
 
   final type.MyType abc;
 }
-""";
+""",
+        extraImportStatements: ["import 'type.dart' as type;"],
+      );
       final expected = _genExpected(r"""
 abstract class $PrefixedTypeFieldCopyWithWorker {
   PrefixedTypeField call({type.MyType? abc});
@@ -560,30 +554,27 @@ extension $PrefixedTypeFieldCopyWith on PrefixedTypeField {
       _$PrefixedTypeFieldCopyWithWorkerImpl(this);
 }
 """);
-      return testBuilder(
-        PartBuilder([CopyWithGenerator()], ".g.dart"),
-        {
-          "$_pkgName|lib/test.dart": src,
-          "$_pkgName|lib/type.dart": "class MyType {}",
-        },
-        generateFor: {'$_pkgName|lib/test.dart'},
-        outputs: {"$_pkgName|lib/test.g.dart": decodedMatches(expected)},
+      return _buildTest(
+        src,
+        expected,
+        extraSrcAssets: {"$_pkgName|lib/type.dart": "class MyType {}"},
       );
     });
   });
 }
 
-String _genSrc(String src) {
+String _genSrc(String src, {List<String> extraImportStatements = const []}) {
   return """
 import 'package:copy_with/copy_with.dart';
+${extraImportStatements.join("\n")}
 part 'test.g.dart';
 $src
 """;
 }
 
 String _genExpected(String src) {
-  return """// dart format width=80
-// GENERATED CODE - DO NOT MODIFY BY HAND
+  return """// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'test.dart';
 
@@ -594,27 +585,19 @@ part of 'test.dart';
 $src""";
 }
 
-Future _buildTest(String src, String expected) {
-  return testBuilder(
+Future _buildTest(
+  String src,
+  String expected, {
+  Map<String, Object>? extraSrcAssets,
+}) async {
+  final readerWriter = TestReaderWriter(rootPackage: _pkgName);
+  await readerWriter.testing.loadIsolateSources();
+  await testBuilder(
     PartBuilder([CopyWithGenerator()], ".g.dart"),
-    {"$_pkgName|lib/test.dart": src},
-    generateFor: {'$_pkgName|lib/test.dart'},
+    {"$_pkgName|lib/test.dart": src, ...?extraSrcAssets},
+    readerWriter: readerWriter,
     outputs: {"$_pkgName|lib/test.g.dart": decodedMatches(expected)},
   );
-}
-
-// Taken from source_gen_test, unclear why this is needed...
-Future<void> _resolveCompilationUnit(String filePath) async {
-  final assetId = AssetId.parse('a|lib/${p.basename(filePath)}');
-  final files =
-      Directory(p.dirname(filePath)).listSync().whereType<File>().toList();
-
-  final fileMap = Map<String, String>.fromEntries(files.map(
-      (f) => MapEntry('a|lib/${p.basename(f.path)}', f.readAsStringSync())));
-
-  await resolveSources(fileMap, (item) async {
-    return await item.libraryFor(assetId);
-  }, resolverFor: 'a|lib/${p.basename(filePath)}');
 }
 
 String get _pkgName => 'pkg$_pkgCacheCount';

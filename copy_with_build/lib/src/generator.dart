@@ -11,7 +11,7 @@ import 'util.dart';
 class CopyWithLintRuleGenerator extends Generator {
   @override
   String? generate(LibraryReader library, BuildStep buildStep) {
-    if (library.annotatedWith(TypeChecker.fromRuntime(CopyWith)).isNotEmpty) {
+    if (library.annotatedWith(TypeChecker.typeNamed(CopyWith)).isNotEmpty) {
       return "// ignore_for_file: library_private_types_in_public_api, duplicate_ignore";
     } else {
       return null;
@@ -112,11 +112,11 @@ extension \$${clazz.displayName}CopyWith on ${clazz.displayName} {
 
   String _buildCopyOf(_FieldMeta field, String inst) {
     if (field.isDeepCopy) {
-      if (TypeChecker.fromRuntime(List).isExactlyType(field.type)) {
+      if (TypeChecker.typeNamed(List).isExactlyType(field.type)) {
         return "List.of($inst.${field.name})";
-      } else if (TypeChecker.fromRuntime(Map).isExactlyType(field.type)) {
+      } else if (TypeChecker.typeNamed(Map).isExactlyType(field.type)) {
         return "Map.of($inst.${field.name})";
-      } else if (TypeChecker.fromRuntime(Set).isExactlyType(field.type)) {
+      } else if (TypeChecker.typeNamed(Set).isExactlyType(field.type)) {
         return "Set.of($inst.${field.name})";
       }
     }
@@ -205,9 +205,12 @@ class _FieldMetaBuilder {
 
   Future<String> _parseTypeString(Resolver resolver, FieldElement field) async {
     if (field.type.alias != null) {
-      return field.type.alias!.element.name;
+      return field.type.alias!.element.name!;
     } else {
-      final astNode = await resolver.astNodeFor(field, resolve: true);
+      final astNode = await resolver.astNodeFor(
+        field.firstFragment,
+        resolve: true,
+      );
       final typeStr =
           astNode!.parent!.childEntities
               .firstWhere((e) => e is TypeAnnotation)
@@ -224,7 +227,7 @@ class _FieldMetaBuilder {
 }
 
 Ignore? _getIgnoreAnnotation(FieldElement field) {
-  if (TypeChecker.fromRuntime(Ignore).hasAnnotationOf(field)) {
+  if (TypeChecker.typeNamed(Ignore).hasAnnotationOf(field)) {
     return const Ignore();
   } else {
     return null;
@@ -232,7 +235,7 @@ Ignore? _getIgnoreAnnotation(FieldElement field) {
 }
 
 Keep? _getKeepAnnotation(FieldElement field) {
-  if (TypeChecker.fromRuntime(Keep).hasAnnotationOf(field)) {
+  if (TypeChecker.typeNamed(Keep).hasAnnotationOf(field)) {
     return const Keep();
   } else {
     return null;
@@ -240,7 +243,7 @@ Keep? _getKeepAnnotation(FieldElement field) {
 }
 
 DeepCopy? _getDeepCopyAnnotation(FieldElement field) {
-  if (TypeChecker.fromRuntime(DeepCopy).hasAnnotationOf(field)) {
+  if (TypeChecker.typeNamed(DeepCopy).hasAnnotationOf(field)) {
     return const DeepCopy();
   } else {
     return null;
