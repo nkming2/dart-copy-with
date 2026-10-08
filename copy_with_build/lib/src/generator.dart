@@ -156,7 +156,7 @@ extension \$${clazz.displayName}CopyWith on ${clazz.displayName} {
       // ignore private fields
       return false;
     }
-    if (field.isSynthetic) {
+    if (field.isOriginGetterSetter) {
       // skip getters
       return false;
     }
@@ -184,7 +184,7 @@ class _FieldMeta {
 
 class _FieldMetaBuilder {
   Future<_FieldMeta> build(Resolver resolver, FieldElement field) async {
-    if (field.type.getDisplayString(withNullability: true) == "InvalidType") {
+    if (field.type.getDisplayString() == "InvalidType") {
       print("Field ${field.name} resolved as InvalidType");
     }
     _parseNullable(field);

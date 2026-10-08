@@ -8,7 +8,7 @@ environment:
   sdk: '>=3.7.0 <4.0.0'
 
 dependencies:
-  analyzer: ">=8.1.1"
+  analyzer: ">=10.0.0 <15.0.0"
   build: ">=4.0.5 <5.0.0"
   collection: '>=1.15.0 <2.0.0'
   copy_with:
@@ -20,7 +20,7 @@ dependencies:
 
 dev_dependencies:
   build_test: ">=3.5.12"
-  dart_style: 3.1.2
+  dart_style: 3.1.7
   lints: ">=2.0.0"
   path: any
   test: any
